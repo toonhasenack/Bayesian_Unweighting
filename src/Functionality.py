@@ -21,7 +21,6 @@ class Unweight:
         for chi in chis:
             assert len(chi[1]) == length, "Not all chis have the same length!"
 
-        
         if weights is None:
             self.weights = np.ones(length)
         else:
@@ -38,8 +37,11 @@ class Unweight:
         Returns:
             float: Entropy value.
         """
-        return np.sum(xlogy(p1, p1/p2))
-
+        log = xlogy(p1, p1/p2)
+        log[np.isnan(log)] = 0
+        entropy = np.sum(log)
+        return entropy
+    
     def reweight(self, i: int = 0) -> None:
         """
         Perform reweighting.
@@ -61,7 +63,7 @@ class Unweight:
         """
         pcum = np.zeros(len(self.reweights) + 1)
         pcum[1:] = np.cumsum(self.reprobs)
-        unweights = np.zeros(len(self.reweights))
+        unweights = np.zeros(len(self.reweights), dtype="int")
         for k in range(len(self.reweights)):
             for j in range(Np):
                 condition_one = j/Np - pcum[k] >= 0
@@ -82,7 +84,7 @@ class Unweight:
         Returns:
             Tuple[np.ndarray, np.ndarray, int]: Tuple containing arrays of Nps, entropies, and optimal Np value.
         """
-        Nps = np.logspace(1, np.log10(len(self.weights))+1, 100, dtype=np.int64)
+        Nps = np.logspace(1, np.log10(len(self.weights)), 50, dtype=np.int64)
         entropies = np.zeros(len(Nps))
         for i in tqdm(range(len(Nps))):
             self.unweight(Nps[i])
