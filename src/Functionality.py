@@ -74,7 +74,7 @@ class Unweight:
         self.unweights = unweights
         self.unprobs = unweights/np.sum(unweights)
 
-    def optimize(self, thresh: float):
+    def optimize(self, thresh: float, earlystopping: bool = False):
         """
         Optimize the unweighting process based on entropy threshold.
 
@@ -84,13 +84,20 @@ class Unweight:
         Returns:
             Tuple[np.ndarray, np.ndarray, int]: Tuple containing arrays of Nps, entropies, and optimal Np value.
         """
-        Nps = np.logspace(1, np.log10(len(self.weights)), 50, dtype=np.int64)
+        Nps = np.logspace(1, np.log10(len(self.weights))+1, 50, dtype=np.int64)
         entropies = np.zeros(len(Nps))
         for i in tqdm(range(len(Nps))):
             self.unweight(Nps[i])
             entropies[i] = self.entropy(self.unprobs, self.reprobs)
-
-        loc = np.where(entropies <= thresh)[0][0]
+            if entropies[i] <= thresh and earlystopping:
+                loc = i
+                break
+        if not earlystopping:
+            try:
+                loc = np.where(entropies <= thresh)[0][0]
+            except:
+                print("Failed minimisation procedure! Defaulting to lowest entropy.")
+                loc = -1
         Nopt = Nps[loc]
 
         return Nps, entropies, Nopt
