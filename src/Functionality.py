@@ -74,7 +74,7 @@ class Unweight:
         self.unweights = unweights
         self.unprobs = unweights/np.sum(unweights)
 
-    def optimize(self, thresh: float, earlystopping: bool = False):
+    def optimize(self, thresh: float, earlystopping: bool = True):
         """
         Optimize the unweighting process based on entropy threshold.
 
@@ -92,12 +92,14 @@ class Unweight:
             if entropies[i] <= thresh and earlystopping:
                 loc = i
                 break
-        if not earlystopping:
+
+        if i == len(Nps)-1:
             try:
                 loc = np.where(entropies <= thresh)[0][0]
             except:
                 print("Failed minimisation procedure! Defaulting to lowest entropy.")
                 loc = -1
+                
         Nopt = Nps[loc]
 
         return Nps, entropies, Nopt
