@@ -74,6 +74,11 @@ class Unweight:
         self.unweights = unweights
         self.unprobs = unweights/np.sum(unweights)
 
+    def effective_replicas(self, weights):
+        N = np.sum(weights)
+        Neff = int(np.exp(-1/N*np.sum(xlogy(weights,weights/N))))
+        return Neff
+
     def optimize(self, thresh: float, earlystopping: bool = True):
         """
         Optimize the unweighting process based on entropy threshold.
