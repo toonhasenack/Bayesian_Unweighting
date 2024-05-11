@@ -42,18 +42,21 @@ class Unweight:
         entropy = np.sum(log)
         return entropy
     
-    def reweight(self, i: int = 0) -> None:
+    def reweight(self, i: int = 0, thresh: float = 1e-12) -> None:
         """
         Perform reweighting.
 
         Args:
             i (int): Index of the chi array to reweight.
+            thresh (float, optional): Threshold value for setting small weights to zero. Defaults to 1e-12.
         """
+
         n, chi = self.chis[i]
         exp = (n-1)*np.log(chi) - 1/2*np.power(chi,2.0)
-        self.reweights = np.exp(exp - np.average(exp))
+        self.reweights = np.exp(exp - np.mean(exp))
         self.reweights = len(self.reweights)*self.reweights/np.sum(self.reweights)
-        self.reprobs = self.reweights/np.sum(self.reweights)
+        self.reweights[self.reweights <= thresh] = 0
+        self.reprobs = self.reweights/len(self.reweights)
 
     def unweight(self, Np: int) -> None:
         """
@@ -75,7 +78,16 @@ class Unweight:
         self.unweights = unweights
         self.unprobs = unweights/np.sum(unweights)
 
-    def effective_replicas(self, weights):
+    def effective_replicas(self, weights: np.ndarray) -> int:
+        """
+        Calculate the effective number of replicas.
+
+        Args:
+            weights (np.ndarray): Array of weights.
+
+        Returns:
+            int: Effective number of replicas.
+        """
         N = len(weights)
         Neff = int(np.exp(-1/N*np.sum(xlogy(weights,weights/N))))
         return Neff
@@ -86,6 +98,7 @@ class Unweight:
 
         Args:
             thresh (float): Entropy threshold value.
+            earlystopping (bool, optional): Whether to stop optimization early if threshold is reached. Defaults to True.
 
         Returns:
             Tuple[np.ndarray, np.ndarray, int]: Tuple containing arrays of Nps, entropies, and optimal Np value.
