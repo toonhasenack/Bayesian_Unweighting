@@ -50,7 +50,8 @@ class Unweight:
             i (int): Index of the chi array to reweight.
         """
         n, chi = self.chis[i]
-        self.reweights = np.multiply(np.multiply(np.power(chi, n-1), np.exp(-1/2*np.power(chi,2.0))),self.weights)
+        exp = (n-1)*np.log(chi) - 1/2*np.power(chi,2.0)
+        self.reweights = np.exp(exp - np.average(exp))
         self.reweights = len(self.reweights)*self.reweights/np.sum(self.reweights)
         self.reprobs = self.reweights/np.sum(self.reweights)
 
@@ -75,7 +76,7 @@ class Unweight:
         self.unprobs = unweights/np.sum(unweights)
 
     def effective_replicas(self, weights):
-        N = np.sum(weights)
+        N = len(weights)
         Neff = int(np.exp(-1/N*np.sum(xlogy(weights,weights/N))))
         return Neff
 
